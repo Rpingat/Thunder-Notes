@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Button, Input, Text, Stack } from '@chakra-ui/react';
+import { Box, Button, Input, Text, Stack, Spinner } from '@chakra-ui/react';
 import { supabase } from '../supabaseClient';
 
 const Login = ({ onLogin }) => {
@@ -7,20 +7,25 @@ const Login = ({ onLogin }) => {
   const [password, setPassword] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
   const [error, setError] = useState(null);
+  const [isLoading, setIsLoading] = useState(false); // New loading state
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setIsLoading(true); // Show loading spinner
+    setError(null); // Reset error on new attempt
     try {
+      let authResult;
       if (isSignUp) {
-        const { error } = await supabase.auth.signUp({ email, password });
-        if (error) throw error;
+        authResult = await supabase.auth.signUp({ email, password });
       } else {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
+        authResult = await supabase.auth.signInWithPassword({ email, password });
       }
-      onLogin();
+      if (authResult.error) throw authResult.error;
+      onLogin(); // Successful login/signup
     } catch (error) {
-      setError(error.message);
+      setError(error.message); // Show error message
+    } finally {
+      setIsLoading(false); // Hide loading spinner
     }
   };
 
@@ -45,8 +50,8 @@ const Login = ({ onLogin }) => {
             onChange={(e) => setPassword(e.target.value)}
             required
           />
-          <Button type="submit" colorScheme="teal">
-            {isSignUp ? 'Sign Up' : 'Login'}
+          <Button type="submit" colorScheme="teal" isDisabled={isLoading}>
+            {isLoading ? <Spinner size="sm" /> : isSignUp ? 'Sign Up' : 'Login'}
           </Button>
           <Button variant="link" onClick={() => setIsSignUp(!isSignUp)}>
             {isSignUp ? 'Already have an account? Login' : 'Need an account? Sign Up'}

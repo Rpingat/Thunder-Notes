@@ -2,26 +2,28 @@ import React, { useEffect, useState } from 'react';
 import { Box, Textarea } from '@chakra-ui/react';
 import { io } from 'socket.io-client';
 
-const serverUrl = import.meta.env.VITE_SERVER_URL;
-const socket = io(serverUrl);
-
 const Notepad = () => {
   const [note, setNote] = useState('');
+  const [socket, setSocket] = useState(null); // Track socket instance
 
   useEffect(() => {
-    socket.on('noteUpdate', (updatedNote) => {
+    const newSocket = io(import.meta.env.VITE_SERVER_URL); // Create socket connection
+    setSocket(newSocket);
+
+    newSocket.on('noteUpdate', (updatedNote) => {
       setNote(updatedNote);
     });
 
     return () => {
-      socket.off('noteUpdate');
+      newSocket.off('noteUpdate'); // Clean up listeners
+      newSocket.disconnect(); // Close socket connection on unmount
     };
   }, []);
 
   const handleChange = (e) => {
     const updatedNote = e.target.value;
     setNote(updatedNote);
-    socket.emit('noteUpdate', updatedNote);
+    socket?.emit('noteUpdate', updatedNote); // Emit only if socket exists
   };
 
   return (
