@@ -5,6 +5,7 @@ import { Server as SocketIO } from 'socket.io';
 import { createClient } from '@supabase/supabase-js';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
+import fs from 'fs';
 dotenv.config();
 
 // Get current directory path
@@ -23,10 +24,22 @@ export const supabase = createClient(supabaseUrl, supabaseKey);
 // Serve static files from the React app
 app.use(express.static(path.join(__dirname, 'dist')));
 
-// Serve the React app on the root route
-app.get('/', (req, res) => {
+// Fallback route - Serve the React app for all unknown routes
+app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'dist', 'index.html'));
 });
+
+// File path where notes will be saved on the server
+const notesFilePath = path.join(__dirname, 'notes.txt');
+
+// Function to save notes to the server file system
+const saveNoteToFile = (note) => {
+  fs.writeFileSync(notesFilePath, note, 'utf8', (err) => {
+    if (err) {
+      console.error('Error saving note to server file:', err);
+    }
+  });
+};
 
 // Set up Socket.IO for real-time updates
 io.on('connection', (socket) => {
@@ -35,6 +48,9 @@ io.on('connection', (socket) => {
   socket.on('noteUpdate', (data) => {
     // Handle note updates from clients
     socket.broadcast.emit('noteUpdate', data);
+
+    // Save the note on the server
+    saveNoteToFile(data);
   });
 
   socket.on('disconnect', () => {

@@ -7,5 +7,8 @@ export default defineConfig({
   define: {
     'process.env': process.env
   },
+  build: {
+    sourcemap: true,  // Enable source maps for production builds
+  },
  });
 

@@ -13,6 +13,7 @@ const Login = ({ onLogin }) => {
     e.preventDefault();
     setIsLoading(true); // Show loading spinner
     setError(null); // Reset error on new attempt
+
     try {
       let authResult;
       if (isSignUp) {
@@ -20,8 +21,10 @@ const Login = ({ onLogin }) => {
       } else {
         authResult = await supabase.auth.signInWithPassword({ email, password });
       }
+
       if (authResult.error) throw authResult.error;
-      onLogin(); // Successful login/signup
+      // Redirect to Notepad after successful login/signup
+      window.location.href = '/';
     } catch (error) {
       setError(error.message); // Show error message
     } finally {
@@ -32,7 +35,7 @@ const Login = ({ onLogin }) => {
   return (
     <Box maxW="sm" mx="auto" p={4} borderWidth={1} borderRadius="lg" boxShadow="md">
       <Text fontSize="2xl" fontWeight="bold" textAlign="center">
-        Login / Signup
+        {isSignUp ? 'Sign Up' : 'Login'}
       </Text>
       <form onSubmit={handleSubmit}>
         <Stack spacing={4} mt={4}>
