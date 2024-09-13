@@ -4,6 +4,8 @@ import http from 'http';
 import { Server as SocketIO } from 'socket.io';
 import { createClient } from '@supabase/supabase-js';
 import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
+dotenv.config();
 
 // Get current directory path
 const __filename = fileURLToPath(import.meta.url);

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Box, Textarea } from '@chakra-ui/react';
 import { io } from 'socket.io-client';
 
-const serverUrl = process.env.SERVER_URL;
+const serverUrl = import.meta.env.VITE_SERVER_URL;
 const socket = io(serverUrl);
 
 const Notepad = () => {

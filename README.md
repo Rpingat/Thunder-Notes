@@ -56,9 +56,9 @@ Environment Variables
 ----
 If needed, create a .env file in the server directory and set the following environment variables:
 ```
-SUPABASE_URL=your_supabase_url
-SUPABASE_KEY=your_supabase_key
-SERVER_URL=your_server_url
+VITE_SUPABASE_URL=your_supabase_url
+VITE_SUPABASE_KEY=your_supabase_key
+VITE_SERVER_URL=your_server_url
 ```
 Running the Application
 ----
