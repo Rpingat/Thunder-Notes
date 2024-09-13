@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { Box, Button, Input, Text, Stack, Spinner } from '@chakra-ui/react';
 import { supabase } from '../supabaseClient';
+import { useNavigate } from 'react-router-dom';
 
-const Login = ({ onLogin }) => {
+const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
   const [error, setError] = useState(null);
   const [isLoading, setIsLoading] = useState(false); // New loading state
+  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -23,8 +25,7 @@ const Login = ({ onLogin }) => {
       }
 
       if (authResult.error) throw authResult.error;
-      // Redirect to Notepad after successful login/signup
-      window.location.href = '/';
+      navigate('/');  // Redirect to the homepage after login/signup
     } catch (error) {
       setError(error.message); // Show error message
     } finally {

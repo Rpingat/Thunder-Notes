@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Textarea } from '@chakra-ui/react';
 import { io } from 'socket.io-client';
-import { supabase } from '../supabaseClient'; // Correct Supabase import
+import { supabase } from '../supabaseClient';
 
 const Notepad = ({ isLoggedIn, user }) => {
   const [note, setNote] = useState('');
@@ -27,7 +27,7 @@ const Notepad = ({ isLoggedIn, user }) => {
     newSocket.on('noteUpdate', (updatedNote) => {
       setNote(updatedNote);
       if (!isLoggedIn) {
-        localStorage.setItem('note', updatedNote); // Save to localStorage for anonymous users
+        localStorage.setItem('note', updatedNote);  // Save to localStorage for anonymous users
       }
     });
 
@@ -60,11 +60,11 @@ const Notepad = ({ isLoggedIn, user }) => {
     setNote(updatedNote);
 
     if (isLoggedIn && user) {
-      socket.emit('noteUpdate', updatedNote); // Broadcast update to server
-      saveNoteToSupabase(updatedNote); // Save note to Supabase
-    } else {
-      localStorage.setItem('note', updatedNote); // Save locally for anonymous users
-      socket.emit('noteUpdate', updatedNote); // Broadcast update to server
+      socket.emit('noteUpdate', updatedNote);  // Broadcast update to server
+      saveNoteToSupabase(updatedNote);  // Save note to Supabase
+     } else {
+      localStorage.setItem('note', updatedNote);  // Save locally for anonymous users
+      socket.emit('noteUpdate', updatedNote);  // Broadcast update to server
     }
   };
 

@@ -60,7 +60,7 @@ const App = () => {
           <Routes>
             <Route path="/" element={<Notepad isLoggedIn={isLoggedIn} user={user} />} />
             <Route path="/login" element={<Login />} />
-            <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="*" element={<navigate to="/" replace />} />
           </Routes>
         </Box>
       </Flex>
