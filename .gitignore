@@ -1,0 +1,53 @@
+# Node.js
+node_modules/
+package-lock.json
+npm-debug.log
+yarn-error.log
+yarn.lock
+
+# Build output
+dist/
+build/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Log files
+*.log
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Editor directories and files
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+
+# PM2 files
+pids/
+logs/
+ecosystem.config.js
+
+# Temporary files
+*.tmp
+*.swp
+*.swo
+
+# React build files
+*.cache
+*.next
+.cache/
+next.config.js
+
+# Supabase
+supabase/.config
+
+# Chakra UI icons package
+node_modules/@chakra-ui/icons/
+
