@@ -5,34 +5,36 @@ import { supabase } from '../supabaseClient';
 
 const Notepad = ({ isLoggedIn, user }) => {
   const [note, setNote] = useState('');
-  const [socket, setSocket] = useState(null); // Track socket instance for authenticated users only
+  const [socket, setSocket] = useState(null); // Track socket instance
 
   useEffect(() => {
     const loadNotes = async () => {
       if (isLoggedIn && user) {
         // Load notes from Supabase for authenticated users
         loadNotesFromSupabase(user.id);
-        
-        // Initialize Socket.IO only for authenticated users
-        const newSocket = io(import.meta.env.VITE_SERVER_URL);
-        setSocket(newSocket);
-
-        newSocket.on('noteUpdate', (updatedNote) => {
-          setNote(updatedNote);
-        });
-
-        return () => {
-          newSocket.off('noteUpdate'); // Clean up listeners
-          newSocket.disconnect(); // Close socket connection on unmount
-        };
       } else {
-        // Load notes from localStorage for unauthenticated users
+        // Load notes from localStorage for anonymous users
         const localNote = localStorage.getItem('note');
         if (localNote) setNote(localNote);
       }
     };
 
     loadNotes();
+
+    const newSocket = io(import.meta.env.VITE_SERVER_URL);
+    setSocket(newSocket);
+
+    newSocket.on('noteUpdate', (updatedNote) => {
+      setNote(updatedNote);
+      if (!isLoggedIn) {
+        localStorage.setItem('note', updatedNote);  // Save to localStorage for anonymous users
+      }
+    });
+
+    return () => {
+      newSocket.off('noteUpdate'); // Clean up listeners
+      newSocket.disconnect(); // Close socket connection on unmount
+    };
   }, [isLoggedIn, user]);
 
   const loadNotesFromSupabase = async (userId) => {
@@ -60,8 +62,9 @@ const Notepad = ({ isLoggedIn, user }) => {
     if (isLoggedIn && user) {
       socket.emit('noteUpdate', updatedNote);  // Broadcast update to server
       saveNoteToSupabase(updatedNote);  // Save note to Supabase
-    } else {
+     } else {
       localStorage.setItem('note', updatedNote);  // Save locally for anonymous users
+      socket.emit('noteUpdate', updatedNote);  // Broadcast update to server
     }
   };
 
@@ -81,3 +84,4 @@ const Notepad = ({ isLoggedIn, user }) => {
 };
 
 export default Notepad;
+

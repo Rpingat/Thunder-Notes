@@ -1,35 +1,16 @@
-import { extendTheme, ThemeProvider } from '@chakra-ui/react';
+import React, { useEffect, useState } from 'react';
+import { ChakraProvider, Box, Flex, Button, useColorMode, Text } from '@chakra-ui/react';
+import { MoonIcon, SunIcon } from '@chakra-ui/icons';
+import { BrowserRouter as Router, Route, Routes, useNavigate } from 'react-router-dom';  // Import useNavigate
+import Notepad from './components/Notepad';
+import Login from './components/Login';
+import { supabase } from './supabaseClient';
 
-// Define custom themes
-const customTheme = extendTheme({
-  colors: {
-    brand: {
-      100: "#f7fafc",
-      900: "#1a202c",
-    },
-    yellowMode: {
-      100: "#FFF9C4",
-      200: "#FFF176",
-      900: "#FBC02D",
-    },
-  },
-  components: {
-    Button: {
-      baseStyle: {
-        fontWeight: 'bold',
-        borderRadius: '8px',
-        padding: '12px',
-      },
-    },
-  },
-});
-
-// Wrap with ThemeProvider in the App component
 const App = () => {
   const { colorMode, toggleColorMode } = useColorMode();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
-  const navigate = useNavigate();
+  const navigate = useNavigate();  // useNavigate hook to programmatically navigate
 
   useEffect(() => {
     const checkUser = async () => {
@@ -47,47 +28,51 @@ const App = () => {
     await supabase.auth.signOut();
     setIsLoggedIn(false);
     setUser(null);
-    navigate('/');
+    navigate('/');  // Navigate back to the homepage after logout
   };
 
   const handleLoginSignup = () => {
-    navigate('/login');
+    navigate('/login');  // Programmatically navigate to the /login route
   };
 
   return (
-    <ThemeProvider theme={customTheme}>
-      <ChakraProvider>
-        <Flex direction="column" height="100vh">
-          <Flex p={4} justify="space-between" align="center">
-            <Button onClick={toggleColorMode}>
-              {colorMode === 'light' ? <MoonIcon /> : <SunIcon />}
-            </Button>
-            {isLoggedIn ? (
-              <Flex align="center">
-                <Text mr={4}>Logged in as: {user?.email}</Text>
-                <Button colorScheme="red" onClick={handleLogout}>
-                  Logout
-                </Button>
-              </Flex>
-            ) : (
-              <Button colorScheme="teal" onClick={handleLoginSignup}>
-                Login / Signup
+    <ChakraProvider>
+      <Flex direction="column" height="100vh">
+        <Flex p={4} justify="space-between" align="center">
+          <Button onClick={toggleColorMode}>
+            {colorMode === 'light' ? <MoonIcon /> : <SunIcon />}
+          </Button>
+          {isLoggedIn ? (
+            <Flex align="center">
+              <Text mr={4}>Logged in as: {user?.email}</Text>
+              <Button colorScheme="red" onClick={handleLogout}>
+                Logout
               </Button>
-            )}
-          </Flex>
-
-          <Box flex="1" p={4}>
-            <Routes>
-              <Route path="/" element={<Notepad isLoggedIn={isLoggedIn} user={user} />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="*" element={<navigate to="/" replace />} />
-            </Routes>
-          </Box>
+            </Flex>
+          ) : (
+            <Button colorScheme="teal" onClick={handleLoginSignup}>
+              Login / Signup
+            </Button>
+          )}
         </Flex>
-      </ChakraProvider>
-    </ThemeProvider>
+
+        <Box flex="1" p={4}>
+          <Routes>
+            <Route path="/" element={<Notepad isLoggedIn={isLoggedIn} user={user} />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="*" element={<navigate to="/" replace />} />
+          </Routes>
+        </Box>
+      </Flex>
+    </ChakraProvider>
   );
 };
+
+const AppWithRouter = () => (
+  <Router>
+    <App />
+  </Router>
+);
 
 export default AppWithRouter;
 
