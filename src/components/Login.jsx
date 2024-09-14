@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Box, Button, Input, Text, Stack, Spinner, useToast } from '@chakra-ui/react';
+import { Box, Button, Input, Text, Stack, Spinner } from '@chakra-ui/react';
 import { supabase } from '../supabaseClient';
 import { useNavigate } from 'react-router-dom';
 
@@ -8,14 +8,13 @@ const Login = () => {
   const [password, setPassword] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
   const [error, setError] = useState(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false); // New loading state
   const navigate = useNavigate();
-  const toast = useToast();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setIsLoading(true);
-    setError(null);
+    setIsLoading(true); // Show loading spinner
+    setError(null); // Reset error on new attempt
 
     try {
       let authResult;
@@ -26,16 +25,11 @@ const Login = () => {
       }
 
       if (authResult.error) throw authResult.error;
-      navigate('/');
+      navigate('/');  // Redirect to the homepage after login/signup
     } catch (error) {
-      setError(error.message);
-      toast({
-        title: "Authentication Error",
-        description: error.message,
-        status: "error",
-      });
+      setError(error.message); // Show error message
     } finally {
-      setIsLoading(false);
+      setIsLoading(false); // Hide loading spinner
     }
   };
 

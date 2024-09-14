@@ -1,84 +1,67 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { Box, Textarea, Spinner, useToast } from '@chakra-ui/react';
+import React, { useEffect, useState } from 'react';
+import { Box, Textarea } from '@chakra-ui/react';
 import { io } from 'socket.io-client';
 import { supabase } from '../supabaseClient';
 
 const Notepad = ({ isLoggedIn, user }) => {
   const [note, setNote] = useState('');
-  const [socket, setSocket] = useState(null);
-  const toast = useToast();
+  const [socket, setSocket] = useState(null); // Track socket instance for authenticated users only
 
   useEffect(() => {
     const loadNotes = async () => {
       if (isLoggedIn && user) {
-        try {
-          const { data, error } = await supabase
-            .from('notes')
-            .select('content')
-            .eq('user_id', user.id)
-            .single();
-          if (error) throw error;
-          if (data) setNote(data.content);
-        } catch (error) {
-          toast({
-            title: "Error",
-            description: "Failed to load notes.",
-            status: "error",
-          });
-        }
+        // Load notes from Supabase for authenticated users
+        loadNotesFromSupabase(user.id);
+        
+        // Initialize Socket.IO only for authenticated users
+        const newSocket = io(import.meta.env.VITE_SERVER_URL);
+        setSocket(newSocket);
+
+        newSocket.on('noteUpdate', (updatedNote) => {
+          setNote(updatedNote);
+        });
+
+        return () => {
+          newSocket.off('noteUpdate'); // Clean up listeners
+          newSocket.disconnect(); // Close socket connection on unmount
+        };
       } else {
+        // Load notes from localStorage for unauthenticated users
         const localNote = localStorage.getItem('note');
         if (localNote) setNote(localNote);
       }
     };
 
     loadNotes();
+  }, [isLoggedIn, user]);
 
-    if (isLoggedIn) {
-      const newSocket = io(import.meta.env.VITE_SERVER_URL);
-      setSocket(newSocket);
+  const loadNotesFromSupabase = async (userId) => {
+    const { data, error } = await supabase
+      .from('notes')
+      .select('content')
+      .eq('user_id', userId)
+      .single();
+    if (data) setNote(data.content);
+  };
 
-      newSocket.on('noteUpdate', (updatedNote) => {
-        setNote(updatedNote);
-        if (!isLoggedIn) {
-          localStorage.setItem('note', updatedNote);
-        }
-      });
-
-      return () => {
-        newSocket.off('noteUpdate');
-        newSocket.disconnect();
-      };
+  const saveNoteToSupabase = async (updatedNote) => {
+    const { error } = await supabase
+      .from('notes')
+      .upsert({ user_id: user.id, content: updatedNote });
+    if (error) {
+      console.error('Error saving note to Supabase:', error.message);
     }
-  }, [isLoggedIn, user, toast]);
-
-  const saveNoteToSupabase = useCallback(async (updatedNote) => {
-    try {
-      const { error } = await supabase
-        .from('notes')
-        .upsert({ user_id: user.id, content: updatedNote });
-      if (error) throw error;
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to save note.",
-        status: "error",
-      });
-    }
-  }, [user, toast]);
+  };
 
   const handleChange = (e) => {
     const updatedNote = e.target.value;
     setNote(updatedNote);
 
     if (isLoggedIn && user) {
-      socket.emit('noteUpdate', updatedNote);
-      saveNoteToSupabase(updatedNote);
+      socket.emit('noteUpdate', updatedNote);  // Broadcast update to server
+      saveNoteToSupabase(updatedNote);  // Save note to Supabase
     } else {
-      localStorage.setItem('note', updatedNote);
-      if (socket) {
-        socket.emit('noteUpdate', updatedNote);
-      }
+      localStorage.setItem('note', updatedNote);  // Save locally for anonymous users
     }
   };
 
@@ -98,4 +81,3 @@ const Notepad = ({ isLoggedIn, user }) => {
 };
 
 export default Notepad;
-
