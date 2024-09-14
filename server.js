@@ -6,6 +6,7 @@ import { createClient } from '@supabase/supabase-js';
 import { fileURLToPath } from 'url';
 import dotenv from 'dotenv';
 import fs from 'fs';
+
 dotenv.config();
 
 // Get current directory path
@@ -34,7 +35,7 @@ const notesFilePath = path.join(__dirname, 'notes.txt');
 
 // Function to save notes to the server file system
 const saveNoteToFile = (note) => {
-  fs.writeFileSync(notesFilePath, note, 'utf8', (err) => {
+  fs.writeFile(notesFilePath, note, 'utf8', (err) => {
     if (err) {
       console.error('Error saving note to server file:', err);
     }

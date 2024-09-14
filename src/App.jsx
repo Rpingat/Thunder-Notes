@@ -1,39 +1,29 @@
-import { extendTheme, ThemeProvider } from '@chakra-ui/react';
+import React, { useCallback, useEffect, useState } from 'react';
+import { Box, Button, Flex, Text, useColorMode, useToast } from '@chakra-ui/react';
+import { MoonIcon, SunIcon } from '@chakra-ui/icons';
+import { BrowserRouter as Router, Route, Routes, useNavigate } from 'react-router-dom';
+import Notepad from './components/Notepad';
+import Login from './components/Login';
+import { supabase } from './supabaseClient';
 
-// Define custom themes
-const customTheme = extendTheme({
-  colors: {
-    brand: {
-      100: "#f7fafc",
-      900: "#1a202c",
-    },
-    yellowMode: {
-      100: "#FFF9C4",
-      200: "#FFF176",
-      900: "#FBC02D",
-    },
-  },
-  components: {
-    Button: {
-      baseStyle: {
-        fontWeight: 'bold',
-        borderRadius: '8px',
-        padding: '12px',
-      },
-    },
-  },
-});
-
-// Wrap with ThemeProvider in the App component
 const App = () => {
   const { colorMode, toggleColorMode } = useColorMode();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
+  const toast = useToast();
 
   useEffect(() => {
     const checkUser = async () => {
-      const { data } = await supabase.auth.getUser();
+      const { data, error } = await supabase.auth.getUser();
+      if (error) {
+        toast({
+          title: "Error",
+          description: "Failed to check user status.",
+          status: "error",
+        });
+        return;
+      }
       if (data?.user) {
         setIsLoggedIn(true);
         setUser(data.user);
@@ -41,13 +31,22 @@ const App = () => {
     };
 
     checkUser();
-  }, []);
+  }, [toast]);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    setIsLoggedIn(false);
-    setUser(null);
-    navigate('/');
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      setIsLoggedIn(false);
+      setUser(null);
+      navigate('/');
+    } catch (error) {
+      toast({
+        title: "Logout Error",
+        description: "Failed to log out.",
+        status: "error",
+      });
+    }
   };
 
   const handleLoginSignup = () => {
@@ -55,39 +54,41 @@ const App = () => {
   };
 
   return (
-    <ThemeProvider theme={customTheme}>
-      <ChakraProvider>
-        <Flex direction="column" height="100vh">
-          <Flex p={4} justify="space-between" align="center">
-            <Button onClick={toggleColorMode}>
-              {colorMode === 'light' ? <MoonIcon /> : <SunIcon />}
+    <Box>
+      <Flex p={4} justify="space-between" align="center">
+        <Button onClick={toggleColorMode}>
+          {colorMode === 'light' ? <MoonIcon /> : <SunIcon />}
+        </Button>
+        {isLoggedIn ? (
+          <Flex align="center">
+            <Text mr={4}>Logged in as: {user?.email}</Text>
+            <Button colorScheme="red" onClick={handleLogout}>
+              Logout
             </Button>
-            {isLoggedIn ? (
-              <Flex align="center">
-                <Text mr={4}>Logged in as: {user?.email}</Text>
-                <Button colorScheme="red" onClick={handleLogout}>
-                  Logout
-                </Button>
-              </Flex>
-            ) : (
-              <Button colorScheme="teal" onClick={handleLoginSignup}>
-                Login / Signup
-              </Button>
-            )}
           </Flex>
+        ) : (
+          <Button colorScheme="teal" onClick={handleLoginSignup}>
+            Login / Signup
+          </Button>
+        )}
+      </Flex>
 
-          <Box flex="1" p={4}>
-            <Routes>
-              <Route path="/" element={<Notepad isLoggedIn={isLoggedIn} user={user} />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="*" element={<navigate to="/" replace />} />
-            </Routes>
-          </Box>
-        </Flex>
-      </ChakraProvider>
-    </ThemeProvider>
+      <Box p={4}>
+        <Routes>
+          <Route path="/" element={<Notepad isLoggedIn={isLoggedIn} user={user} />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Box>
+    </Box>
   );
 };
+
+const AppWithRouter = () => (
+  <Router>
+    <App />
+  </Router>
+);
 
 export default AppWithRouter;
 
